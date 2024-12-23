@@ -29,6 +29,39 @@
       box-sizing: border-box;
     }
 
+    /* Size selector styles */
+    .size-selector {
+      background-color: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .size-selector input {
+      width: 80px;
+      padding: 0.5rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      font-size: 1rem;
+    }
+    
+    .size-selector button {
+      background-color: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+    }
+    
+    .size-selector button:hover {
+      background-color: #2563eb;
+    }
+
     /* Story / Explanation Panel */
     .story-intro {
       background-color: #f1f5f9;
@@ -253,7 +286,7 @@
       top: 0; left: 0;
       width: 100vw; height: 100vh;
       background-color: rgba(0,0,0,0.6);
-      display: flex;
+      display: none;
       align-items: center;
       justify-content: center;
       z-index: 999;
@@ -291,32 +324,38 @@
 </head>
 <body>
 <div class="wrapper">
+  <!-- Size Selector -->
+  <div class="size-selector" id="sizeSelector">
+    <label for="societySize">Number of people in society (4-20):</label>
+    <input type="number" id="societySize" min="4" max="20" value="8">
+    <button id="applySizeBtn">Apply Size</button>
+  </div>
 
-  <!-- 1) Story Intro (casual explanation) -->
+  <!-- Story Intro -->
   <div class="story-intro">
     <h2>Sorting Society: Scientists, Normies &amp; Stubborn Folk</h2>
     <p>
-      We have a group of people, each with a number (their “belief score”). Our goal is
+      We have a group of people, each with a number (their "belief score"). Our goal is
       to get them arranged from lowest to highest. But each person has a
       <strong>meme type</strong>:
     </p>
     <ul>
-      <li><span class="scientist">Scientist</span>: “If the evidence (numbers) says I'm in the wrong spot, I'll move.”</li>
-      <li><span class="normie">Normie</span>: “I won't move unless everyone else is sorted. Then I'll fall in line.”</li>
-      <li><span class="stubborn">Stubborn</span>: “I never move, no matter what! Everyone else must walk around me.”</li>
+      <li><span class="scientist">Scientist</span>: "If the evidence (numbers) says I'm in the wrong spot, I'll move."</li>
+      <li><span class="normie">Normie</span>: "I won't move unless everyone else is sorted. Then I'll fall in line."</li>
+      <li><span class="stubborn">Stubborn</span>: "I never move, no matter what! Everyone else must walk around me."</li>
     </ul>
     <p>
       Sometimes, the group might <strong>get less sorted</strong> as they shuffle around,
-      aiming for the bigger goal of complete order. Think of it as “two steps forward,
-      one step back.”
+      aiming for the bigger goal of complete order. Think of it as "two steps forward,
+      one step back."
     </p>
     <p style="margin-bottom:0;">
-      <em>Give it a try! Label each person, then press “Start.” For curious minds, click
-      “Look Under the Hood.”</em>
+      <em>Give it a try! Label each person, then press "Start." For curious minds, click
+      "Look Under the Hood."</em>
     </p>
   </div>
 
-  <!-- 2) Top section: Visualization & Chart -->
+  <!-- Top section: Visualization & Chart -->
   <div class="top-section">
     <!-- Left: Visualization -->
     <div class="visualizer">
@@ -339,7 +378,7 @@
     </div>
   </div>
 
-  <!-- 3) Under the Hood (hidden by default) -->
+  <!-- Under the Hood -->
   <div class="under-hood" id="underHoodSection">
     <h3>Under the Hood: Our Bubble Sort + Meme Logic</h3>
     <p>
@@ -350,9 +389,8 @@
   </div>
 </div>
 
-
 <!-- Overlay for choosing a meme type -->
-<div class="overlay" id="overlayMenu" style="display: none;">
+<div class="overlay" id="overlayMenu">
   <div class="overlay-menu">
     <h3>Choose a Meme Type</h3>
     <p>How does this person behave?</p>
@@ -368,7 +406,7 @@
 /***********************************************************************
  *  GLOBAL STATE
  ***********************************************************************/
-const BAR_COUNT = 8;
+let BAR_COUNT = 8;
 
 // We track each bar's "type"
 const SCIENTISTS = new Set();  // always swap if arr[i] > arr[i+1]
@@ -396,7 +434,6 @@ let sortednessHistory = [];
 let codeLines = [];
 let sortTimeout = null;
 
-// Stubborn "walk-around" approach: each pass we do small shifts
 /***********************************************************************
  *  HELPER / UI FUNCTIONS
  ***********************************************************************/
@@ -501,10 +538,13 @@ function generateNumbers() {
 function renderBars() {
   const container = document.getElementById('barsContainer');
   container.innerHTML = '';
+  
+  const barWidth = Math.max(15, Math.min(30, Math.floor(container.clientWidth / (BAR_COUNT * 2)))); // Adjust bar width based on count
 
   numbers.forEach((val, idx) => {
     const bar = document.createElement('div');
     bar.classList.add('bar');
+    bar.style.width = `${barWidth}px`;
     bar.style.height = (val*4)+'px';
 
     // highlight or sorted color
@@ -516,7 +556,6 @@ function renderBars() {
 
     // Meme type icons
     if (STUBBORN.has(idx)) {
-      // donkey or block icon
       const icon = document.createElement('div');
       icon.classList.add('icon');
       icon.textContent = '⛔';
@@ -524,20 +563,18 @@ function renderBars() {
       bar.appendChild(icon);
     }
     else if (NORMIES.has(idx)) {
-      // crowd icon? or "😐"
       const icon = document.createElement('div');
       icon.classList.add('icon');
       if (happyNormies.has(idx)) {
         icon.textContent = '☺';
-        icon.style.color = '#22c55e'; // green
+        icon.style.color = '#22c55e';
       } else {
-        icon.textContent = '🤔'; // or "😐"
-        icon.style.color = '#fb923c'; // orange
+        icon.textContent = '🤔';
+        icon.style.color = '#fb923c';
       }
       bar.appendChild(icon);
     }
     else if (SCIENTISTS.has(idx)) {
-      // microscope or nerd emoji
       const icon = document.createElement('div');
       icon.classList.add('icon');
       icon.textContent = '🔬';
@@ -658,41 +695,6 @@ function chooseMeme(memeType){
 }
 
 /***********************************************************************
- *  STUBBORN: "WALK AROUND" LOGIC
- ***********************************************************************/
-function walkAroundStubborn() {
-  STUBBORN.forEach(idx => {
-    const immVal = numbers[idx];
-    // find ideal sorted position
-    const sortedCopy = [...numbers].sort((a,b)=>a-b);
-    const idealIndex = sortedCopy.indexOf(immVal); // if duplicates, picks first
-
-    if (idx===idealIndex) return; // already in correct spot
-
-    if (idx < idealIndex && idx+1 < numbers.length) {
-      // shift neighbor to left
-      const neighborIndex = idx+1;
-      if (neighborIndex < numbers.length) {
-        const neighborVal = numbers[neighborIndex];
-        numbers[neighborIndex] = immVal;
-        numbers[idx] = neighborVal;
-        logMessage(`Shift: Person ${neighborVal} walks around Stubborn ${immVal} to the left.`);
-      }
-    }
-    else if (idx > idealIndex && idx-1 >= 0) {
-      // shift neighbor to right
-      const neighborIndex = idx-1;
-      if (neighborIndex >=0) {
-        const neighborVal = numbers[neighborIndex];
-        numbers[neighborIndex] = immVal;
-        numbers[idx] = neighborVal;
-        logMessage(`Shift: Person ${neighborVal} walks around Stubborn ${immVal} to the right.`);
-      }
-    }
-  });
-}
-
-/***********************************************************************
  *  BUBBLE SORT STEPS
  ***********************************************************************/
 async function bubbleSortStep(){
@@ -743,10 +745,6 @@ async function bubbleSortStep(){
     swapped=false;
     highlightLine(2);
     renderBars();
-
-    // do single pass stubborn walk-around
-    walkAroundStubborn();
-
     scheduleNextStep();
     return;
   }
@@ -783,9 +781,6 @@ async function bubbleSortStep(){
       const canSwapNormie = !normieInvolved 
          || (normieInvolved && phase==='all-happy'); 
       
-      // Scientists are always willing if there's a rational reason
-      // Normies only if "all-happy"
-
       if(canSwapNormie) {
         highlightLine(7);
         await sleep(200);
@@ -895,7 +890,7 @@ const pseudoCode = [
   '  } while (swapped);',
   '  return arr;',
   '}',
-  '// We extended it: Normies only move if all else is sorted, Stubborn never move, etc.'
+  '// We extended it: Normies only move if all else is sorted, Stubbornnever move, etc.'
 ];
 (function loadCodeLines(){
   const codeSect = document.getElementById('codeSection');
@@ -916,6 +911,21 @@ document.getElementById('startBtn').addEventListener('click', toggleSort);
 document.getElementById('resetBtn').addEventListener('click', reset);
 document.getElementById('toggleHoodBtn').addEventListener('click', toggleUnderHood);
 
+// Size selector logic
+document.getElementById('applySizeBtn').addEventListener('click', function() {
+  const sizeInput = document.getElementById('societySize');
+  const newSize = parseInt(sizeInput.value);
+  
+  if (newSize >= 4 && newSize <= 20) {
+    BAR_COUNT = newSize;
+    generateNumbers();
+    logMessage(`Society size changed to ${newSize} people`);
+  } else {
+    alert('Please enter a number between 4 and 20');
+    sizeInput.value = BAR_COUNT;
+  }
+});
+
 // Overlay
 document.getElementById('chooseScientistBtn').addEventListener('click', ()=>chooseMeme('scientist'));
 document.getElementById('chooseNormieBtn').addEventListener('click', ()=>chooseMeme('normie'));
@@ -924,6 +934,14 @@ document.getElementById('overlayMenu').addEventListener('click',(e)=>{
   if(e.target.id==='overlayMenu'){
     closeMemeMenu();
   }
+});
+
+// Window resize handler for responsive chart
+window.addEventListener('resize', () => {
+  if (sortednessHistory.length > 0) {
+    renderChart();
+  }
+  renderBars();
 });
 
 // Initialize
