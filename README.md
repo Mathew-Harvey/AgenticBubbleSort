@@ -1,5 +1,8 @@
 # Sorting Society: Collective Intelligence Simulation
 
+## Live Demo
+[Try it live here!](https://mathew-harvey.github.io/AgenticBubbleSort/)
+
 ## Overview
 An interactive visualization exploring how sorting algorithms adapt to obstacles, inspired by Michael Levin's research on basal cognition and collective intelligence. The system demonstrates emergent problem-solving behavior through local interactions of agents with different "personality types."
 
